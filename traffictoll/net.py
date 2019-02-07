@@ -5,7 +5,8 @@ import re
 import psutil
 
 
-ProcessFilterPredicate = collections.namedtuple('ProcessFilterPredicate', ['name', 'conditions'])
+ProcessFilterPredicate = collections.namedtuple(
+    'ProcessFilterPredicate', ['name', 'conditions'])
 
 
 def _match_process(process, predicate):
@@ -30,7 +31,6 @@ def filter_net_connections(predicates):
         try:
             process = psutil.Process(connection.pid)
         except psutil.NoSuchProcess:
-            logger.warning('Process with PID {} died while filtering network connections', connection.pid)
             continue
 
         if all(_match_process(process, condition) for condition in predicate.conditions):

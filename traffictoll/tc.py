@@ -20,7 +20,6 @@ INGRESS_QDISC_PARENT_ID = 'ffff:fff1'
 
 
 def _clean_up(remove_ifb_device=False, shutdown_ifb_device=None):
-    logger.info('Cleaning up IFB device')
     if remove_ifb_device:
         run('rmmod ifb')
     if shutdown_ifb_device:
@@ -72,7 +71,8 @@ def _find_free_id(ids):
 
 
 def _get_free_qdisc_id(interface):
-    process = run(f'tc qdisc show dev {interface}', stdout=subprocess.PIPE, universal_newlines=True)
+    process = run(f'tc qdisc show dev {interface}',
+                  stdout=subprocess.PIPE, universal_newlines=True)
 
     ids = set()
     for line in process.stdout.splitlines():
@@ -81,7 +81,6 @@ def _get_free_qdisc_id(interface):
             id_ = int(id_string)
         except ValueError:
             # This should only happen for the ingress QDisc
-            logger.warning('Failed to parse QDisc ID as base 10 integer on line: {!r}', line)
             id_ = int(id_string, 16)
 
         ids.add(id_)
@@ -90,7 +89,8 @@ def _get_free_qdisc_id(interface):
 
 
 def _get_free_class_id(interface, qdisc_id):
-    process = run(f'tc class show dev {interface}', stdout=subprocess.PIPE, universal_newlines=True)
+    process = run(f'tc class show dev {interface}',
+                  stdout=subprocess.PIPE, universal_newlines=True)
 
     ids = set()
     for line in process.stdout.splitlines():
@@ -114,12 +114,14 @@ def tc_setup(interface, download_rate=None, upload_rate=None):
     # Create IFB device QDisc and root class limited at download_rate
     ifb_device_qdisc_id = _get_free_qdisc_id(ifb_device)
     run(f'tc qdisc add dev {ifb_device} root handle {ifb_device_qdisc_id}: htb')
-    ifb_device_root_class_id = _get_free_class_id(ifb_device, ifb_device_qdisc_id)
+    ifb_device_root_class_id = _get_free_class_id(
+        ifb_device, ifb_device_qdisc_id)
     run((f'tc class add dev {ifb_device} parent {ifb_device_qdisc_id}: classid '
          f'{ifb_device_qdisc_id}:{ifb_device_root_class_id} htb rate {download_rate}'))
 
     # Create default class that all traffic is routed through that doesn't match any other filter
-    ifb_default_class_id = tc_add_htb_class(ifb_device, ifb_device_qdisc_id, ifb_device_root_class_id, download_rate)
+    ifb_default_class_id = tc_add_htb_class(
+        ifb_device, ifb_device_qdisc_id, ifb_device_root_class_id, download_rate)
     run((f'tc filter add dev {ifb_device} parent {ifb_device_qdisc_id}: prio 2 matchall flowid '
          f'{ifb_device_qdisc_id}:{ifb_default_class_id}'))
 
@@ -131,7 +133,8 @@ def tc_setup(interface, download_rate=None, upload_rate=None):
          f'{interface_qdisc_id}:{interface_root_class_id} htb rate {upload_rate}'))
 
     # Create default class that all traffic is routed through that doesn't match any other filter
-    interface_default_class_id = tc_add_htb_class(interface, interface_qdisc_id, interface_root_class_id, upload_rate)
+    interface_default_class_id = tc_add_htb_class(
+        interface, interface_qdisc_id, interface_root_class_id, upload_rate)
     run((f'tc filter add dev {interface} parent {interface_qdisc_id}: prio 2 matchall flowid '
          f'{interface_qdisc_id}:{interface_default_class_id}'))
 
@@ -150,7 +153,8 @@ def tc_add_htb_class(interface, parent_qdisc_id, parent_class_id, rate):
 
 
 def _get_filter_ids(interface):
-    process = run(f'tc filter show dev {interface}', stdout=subprocess.PIPE, universal_newlines=True)
+    process = run(f'tc filter show dev {interface}',
+                  stdout=subprocess.PIPE, universal_newlines=True)
     ids = set()
     for line in process.stdout.splitlines():
         match = re.match(FILTER_ID_REGEX, line)
@@ -168,8 +172,7 @@ def tc_add_u32_filter(interface, predicate, parent_qdisc_id, class_id):
 
     difference = after.difference(before)
     if len(difference) > 1:
-        logger.warning('Parsed ambiguous filter handle: {}', difference)
-    return difference.pop()
+        return difference.pop()
 
 
 def tc_remove_u32_filter(interface, filter_id, parent_qdisc_id):
