@@ -8,34 +8,38 @@ from loguru import logger
 from ruamel.yaml import YAML
 
 from traffictoll.net import ProcessFilterPredicate, filter_net_connections
-from traffictoll.tc import INGRESS_QDISC_PARENT_ID, tc_add_htb_class, tc_add_u32_filter, tc_remove_qdisc, \
-    tc_remove_u32_filter, tc_setup
+from traffictoll.tc import clean_up_tc, tc_add_htb_class, tc_add_u32_filter, tc_remove_u32_filter, tc_setup
 
 CONFIG_ENCODING = 'UTF-8'
 argument_parser = argparse.ArgumentParser()
-argument_parser.add_argument('device')
-argument_parser.add_argument('config')
-argument_parser.add_argument('--delay', '-d', type=float, default=1)
 argument_parser.add_argument('--logging-level', '-l', choices=logger._levels, default='INFO')
+sub_parsers = argument_parser.add_subparsers(dest='action')
+sub_parsers.required = True
+
+config_parser = sub_parsers.add_parser('config')
+config_parser.add_argument('--delay', '-d', type=float, default=1)
+config_parser.add_argument('device')
+config_parser.add_argument('config')
+gui_parser = sub_parsers.add_parser('gui')
 
 
-def _clean_up(ingress_interface, egress_interface):
-    logger.info('Cleaning up QDiscs')
-    tc_remove_qdisc(ingress_interface)
-    tc_remove_qdisc(egress_interface)
-    tc_remove_qdisc(egress_interface, INGRESS_QDISC_PARENT_ID)
-
-
-def cli_main():
+def main():
     arguments = argument_parser.parse_args()
-
     try:
-        main(arguments)
+        arguments.function(arguments)
     except KeyboardInterrupt:
         logger.info('Aborted')
 
 
-def main(arguments):
+def gui_main(arguments):
+    from traffictoll.gui.application import start
+    start()
+
+
+gui_parser.set_defaults(function=gui_main)
+
+
+def config_main(arguments):
     logger.stop(0)
     logger.add(sys.stderr, level=arguments.logging_level)
     with open(arguments.config, 'r', encoding=CONFIG_ENCODING) as file:
@@ -53,7 +57,7 @@ def main(arguments):
     ingress_interface, ingress_qdisc_id, ingress_root_class_id = ingress
     egress_interface, egress_qdisc_id, egress_root_class_id = egress
 
-    atexit.register(_clean_up, ingress_interface, egress_interface)
+    atexit.register(clean_up_tc, ingress_interface, egress_interface)
 
     process_filter_predicates = []
     class_ids = {'ingress': {}, 'egress': {}}
@@ -137,3 +141,6 @@ def main(arguments):
             del filtered_ports[name]
 
         time.sleep(arguments.delay)
+
+
+config_parser.set_defaults(function=config_main)
