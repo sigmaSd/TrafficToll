@@ -4,8 +4,6 @@ import shutil
 import subprocess
 
 
-
-
 # Not sure if subprocess.Popen caches the value
 @functools.lru_cache(None)
 def _which(binary):
@@ -18,5 +16,4 @@ def run(command, **kwargs):
     executable, *args = shlex.split(command)
     executable_path = _which(executable)
 
-    logger.debug(command)
     return subprocess.run([executable_path] + args, **kwargs)

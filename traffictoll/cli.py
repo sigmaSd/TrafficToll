@@ -30,7 +30,7 @@ def cli_main():
     try:
         main(arguments)
     except KeyboardInterrupt:
-        logger.info('Aborted')
+        pass
 
 
 def main(arguments):
