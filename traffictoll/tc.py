@@ -3,7 +3,7 @@ import re
 import subprocess
 
 import psutil
-from loguru import logger
+
 
 from traffictoll.utils import run
 

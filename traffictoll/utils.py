@@ -3,7 +3,7 @@ import shlex
 import shutil
 import subprocess
 
-from loguru import logger
+
 
 
 # Not sure if subprocess.Popen caches the value

@@ -9,7 +9,7 @@ setup(
     author='cryzed',
     author_email='cryzed@googlemail.com',
     description='NetLimiter-like traffic shaping for Linux',
-    install_requires=['psutil', 'loguru', 'ruamel.yaml'],
+
     entry_points={
         'console_scripts': [
             'tt = traffictoll.cli:cli_main'

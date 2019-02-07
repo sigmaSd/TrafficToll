@@ -4,7 +4,7 @@ import collections
 import sys
 import time
 
-from loguru import logger
+
 from ruamel.yaml import YAML
 
 from traffictoll.net import ProcessFilterPredicate, filter_net_connections

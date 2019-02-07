@@ -8,7 +8,7 @@ authors = ["cryzed <cryzed@googlemail.com>"]
 python = "^3.7"
 psutil = "^5.5"
 "ruamel.yaml" = "^0.15.87"
-loguru = "^0.2.5"
+
 
 [tool.poetry.dev-dependencies]
 

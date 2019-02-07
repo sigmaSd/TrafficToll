@@ -3,7 +3,7 @@ import itertools
 import re
 
 import psutil
-from loguru import logger
+
 
 ProcessFilterPredicate = collections.namedtuple('ProcessFilterPredicate', ['name', 'conditions'])
 
